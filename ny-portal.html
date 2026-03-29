@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NY Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #07090d;
+  --surface: #0c0f16;
+  --card: #111520;
+  --border: rgba(100,220,255,0.1);
+  --accent: #64dcff;
+  --accent2: #a78bfa;
+  --green: #00ffaa;
+  --yellow: #ffd700;
+  --red: #ff5577;
+  --pink: #ff6eb4;
+  --text: #c8d8e8;
+  --muted: #4a5a6a;
+  --glow: 0 0 24px rgba(100,220,255,0.2);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 20%, rgba(100,220,255,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 80%, rgba(167,139,250,0.03) 0%, transparent 50%),
+    linear-gradient(rgba(100,220,255,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,220,255,0.012) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ===== SIDEBAR NAV ===== */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 64px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 6px;
+  z-index: 100;
+  transition: width 0.3s;
+}
+
+.sidebar-logo {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  color: var(--accent);
+  text-shadow: var(--glow);
+  margin-bottom: 16px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.nav-item {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
+  background: rgba(100,220,255,0.08);
+  border-color: var(--border);
+}
+
+.nav-item.active {
+  background: rgba(100,220,255,0.12);
+  border-color: rgba(100,220,255,0.3);
+  box-shadow: 0 0 12px rgba(100,220,255,0.15);
+}
+
+.nav-item .tooltip {
+  position: absolute;
+  left: 58px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  letter-spacing: 0.1em;
+}
+
+.nav-item:hover .tooltip { opacity: 1; }
+
+.nav-divider {
+  width: 32px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  margin-left: 64px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== PAGES ===== */
+.page { display: none; padding: 20px 16px 60px; max-width: 820px; }
+.page.active { display: block; }
+
+/* ===== HOME DASHBOARD ===== */
+.home-header {
+  padding: 32px 0 28px;
+  text-align: center;
+}
+
+.portal-title {
+  font-size: clamp(38px, 10vw, 64px);
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: var(--glow);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.portal-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--muted);
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+
+/* API settings */
+.api-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.api-bar label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.api-bar input {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  outline: none;
+}
+
+.api-bar input:focus { border-color: var(--accent); }
+
+.api-save {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 9px 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+}
+
+/* App grid */
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.app-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 18px;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-color, var(--accent));
+  opacity: 0.6;
+}
+
+.app-card:hover {
+  border-color: var(--card-color, var(--accent));
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.app-icon { font-size: 32px; }
+.app-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.app-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.app-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(0,255,170,0.1);
+  color: var(--green);
+  border: 1px solid rgba(0,255,170,0.2);
+}
+
+/* Privacy status bar */
+.privacy-bar {
+  background: var(--surface);
+  border: 1px solid rgba(0,255,170,0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.privacy-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+.privacy-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 0.15em;
+}
+
+.privacy-chips {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto;
+}
+
+.priv-chip {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,255,170,0.2);
+  color: rgba(0,255,170,0.6);
+  letter-spacing: 0.1em;
+}
+
+/* ===== SEARCH PAGE ===== */
+.page-header {
+  padding: 24px 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.page-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.3em;
+  margin-top: 2px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: 52px;
+  padding: 0 16px;
+  gap: 10px;
+  transition: all 0.2s;
+  margin-bottom: 14px;
+}
+
+.search-box:focus-within { border-color: var(--accent); box-shadow: var(--glow); }
+
+.search-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'Syne', sans-serif;
+}
+
+.search-box input::placeholder { color: var(--muted); }
+
+.icon-btn {
+  background: transparent; border: none;
+  color: var(--muted); font-size: 18px;
+  cursor: pointer; padding: 6px; border-radius: 6px;
+  transition: all 0.2s; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.icon-btn:hover { color: var(--accent); background: rgba(100,220,255,0.06); }
+.icon-btn.red { color: var(--red); }
+
+.search-types {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+}
+
+.stype {
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 0.05em;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface);
+  transition: all 0.2s;
+}
+
+.stype:hover { color: var(--text); border-color: rgba(100,220,255,0.3); }
+.stype.selected { color: var(--accent); border-color: var(--accent); background: rgba(100,220,255,0.06); }
+
+.big-btn {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(135deg, rgba(100,220,255,0.12), rgba(167,139,250,0.08));
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px; letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+}
+
+.big-btn:hover { background: rgba(100,220,255,0.18); box-shadow: var(--glow); }
+.big-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Result cards */
+.ai-answer-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: 0.2em;
+  padding: 3px 10px; border-radius: 2px;
+  display: inline-block; margin-bottom: 10px;
+}
+
+.badge-ai { background: rgba(100,220,255,0.08); color: var(--accent); border: 1px solid rgba(100,220,255,0.2); }
+.badge-ig { background: rgba(255,110,180,0.08); color: var(--pink); border: 1px solid rgba(255,110,180,0.2); }
+
+.ai-text { font-size: 14px; line-height: 1.8; color: var(--text); }
+
+.kp-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.kp { display: flex; gap: 10px; font-size: 13px; color: #8a9aaa; line-height: 1.5; align-items: flex-start; }
+.kp-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 7px; }
+
+.result-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: fadeUp 0.4s ease;
+  text-decoration: none;
+  display: block;
+}
+
+.result-item:hover { border-color: rgba(100,220,255,0.3); transform: translateX(4px); }
+.result-domain { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--accent); margin-bottom: 5px; }
+.result-title { font-size: 16px; font-weight: 600; color: #8ab4f8; margin-bottom: 5px; line-height: 1.3; }
+.result-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+.sec-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: 0.3em;
+  color: var(--muted); margin: 20px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.related-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 20px; }
+.related-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px;
+  font-size: 13px; color: var(--text);
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.related-item:hover { border-color: var(--accent); color: var(--accent); }
+.related-item::before { content: '↗'; color: var(--muted); font-size: 12px; }
+
+.cat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.cat-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 7px 14px;
+  font-size: 12px; color: var(--text);
+  text-decoration: none; cursor: pointer; transition: all 0.15s;
+}
+.cat-pill:hover { border-color: var(--accent2); color: var(--accent2); }
+
+/* Loading */
+.loading-wrap { padding: 40px 0; text-align: center; }
+.scan { width: 100%; height: 2px; background: var(--surface); border-radius: 2px; overflow: hidden; margin-bottom: 20px; }
+.scan-bar { height: 100%; width: 35%; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanning 1.3s ease-in-out infinite; }
+@keyframes scanning { 0% { margin-left: -35%; } 100% { margin-left: 135%; } }
+.load-txt { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.2em; animation: fade 1.5s infinite; }
+@keyframes fade { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
+
+/* ===== CHAT PAGE ===== */
+.chat-wrap {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 80px);
+  max-height: 800px;
+}
+
+.chat-messages {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.empty-chat {
+  text-align: center; padding: 40px 20px;
+  color: var(--muted);
+}
+
+.empty-chat .big { font-size: 48px; margin-bottom: 12px; }
+.empty-chat p { font-size: 13px; line-height: 1.7; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.1em; }
+
+.msg { display: flex; gap: 10px; margin-bottom: 16px; animation: fadeUp 0.3s ease; }
+.msg.user { flex-direction: row-reverse; }
+
+.avatar {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  flex-shrink: 0; border: 1px solid var(--border);
+}
+
+.msg.ai .avatar { background: rgba(100,220,255,0.06); color: var(--accent); }
+.msg.user .avatar { background: rgba(167,139,250,0.06); color: var(--accent2); border-color: rgba(167,139,250,0.2); }
+
+.bubble {
+  max-width: 80%; padding: 12px 14px;
+  border-radius: 10px; font-size: 14px; line-height: 1.65;
+}
+
+.msg.ai .bubble { background: rgba(100,220,255,0.04); border: 1px solid var(--border); color: var(--text); }
+.msg.user .bubble { background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.2); color: #d8d0f8; text-align: right; }
+
+.typing { display: flex; gap: 5px; align-items: center; padding: 6px 0; }
+.typing span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: bounce 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100% { transform:translateY(0); opacity:0.4; } 30% { transform:translateY(-6px); opacity:1; } }
+
+.chat-input-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.chat-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+
+#chatInput {
+  flex: 1; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; color: var(--text);
+  font-family: 'Syne', sans-serif; font-size: 14px;
+  outline: none; resize: none; min-height: 46px; max-height: 120px;
+}
+
+#chatInput:focus { border-color: var(--accent); }
+#chatInput::placeholder { color: var(--muted); }
+
+.voice-orb {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0;
+}
+
+.voice-orb:hover { border-color: var(--accent); color: var(--accent); }
+.voice-orb.on { border-color: var(--red); color: var(--red); animation: ringPulse 1s infinite; }
+@keyframes ringPulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,85,119,0.4); } 50% { box-shadow:0 0 0 8px rgba(255,85,119,0); } }
+
+.chat-btns { display: flex; gap: 8px; }
+.send-btn { flex: 1; height: 42px; background: linear-gradient(135deg, rgba(100,220,255,0.1), rgba(167,139,250,0.08)); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.15em; cursor: pointer; transition: all 0.2s; }
+.send-btn:hover { background: rgba(100,220,255,0.18); box-shadow: var(--glow); }
+.send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.clear-btn { height: 42px; padding: 0 14px; background: transparent; border: 1px solid rgba(255,85,119,0.2); color: rgba(255,85,119,0.5); border-radius: 8px; font-family: 'Share Tech Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.2s; }
+.clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ===== INSTAGRAM PRIVACY PAGE ===== */
+.ig-header {
+  background: linear-gradient(135deg, rgba(255,110,180,0.06), rgba(167,139,250,0.06));
+  border: 1px solid rgba(255,110,180,0.15);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.ig-icon { font-size: 36px; flex-shrink: 0; }
+.ig-title { font-size: 18px; font-weight: 700; color: var(--pink); margin-bottom: 4px; }
+.ig-sub { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.privacy-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.ptag { font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 2px; background: rgba(0,255,170,0.06); color: var(--green); border: 1px solid rgba(0,255,170,0.15); letter-spacing: 0.1em; }
+
+.ig-search-box {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+
+.ig-input {
+  flex: 1; background: var(--surface);
+  border: 1px solid rgba(255,110,180,0.2);
+  border-radius: 8px; padding: 13px 16px;
+  color: var(--text); font-family: 'Syne', sans-serif;
+  font-size: 15px; outline: none;
+}
+
+.ig-input:focus { border-color: var(--pink); box-shadow: 0 0 16px rgba(255,110,180,0.15); }
+.ig-input::placeholder { color: var(--muted); }
+
+.ig-btn {
+  background: linear-gradient(135deg, rgba(255,110,180,0.15), rgba(167,139,250,0.1));
+  border: 1px solid rgba(255,110,180,0.4);
+  color: var(--pink); border-radius: 8px;
+  padding: 0 20px; font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+}
+
+.ig-btn:hover { background: rgba(255,110,180,0.2); box-shadow: 0 0 16px rgba(255,110,180,0.2); }
+
+.ig-proxy-list {
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+}
+
+.proxy-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s;
+}
+
+.proxy-card:hover { border-color: rgba(255,110,180,0.3); transform: translateX(3px); }
+.proxy-icon { font-size: 28px; flex-shrink: 0; }
+.proxy-info { flex: 1; }
+.proxy-name { font-size: 15px; font-weight: 600; color: var(--pink); margin-bottom: 3px; }
+.proxy-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.proxy-badge { font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 2px; background: rgba(0,255,170,0.06); color: var(--green); border: 1px solid rgba(0,255,170,0.15); flex-shrink: 0; }
+
+.ig-note {
+  background: rgba(255,215,0,0.04);
+  border: 1px solid rgba(255,215,0,0.15);
+  border-radius: 8px; padding: 12px 14px;
+  font-size: 12px; color: rgba(255,215,0,0.7);
+  line-height: 1.6;
+}
+
+/* ===== AI TOOLS PAGE ===== */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tool-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 16px;
+  cursor: pointer; transition: all 0.25s;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.tool-card:hover { border-color: var(--card-color, var(--accent2)); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+.tool-icon { font-size: 28px; }
+.tool-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.tool-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* Tool modals */
+.tool-modal {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.3s ease;
+}
+
+.tool-modal.open { display: block; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 700; color: var(--accent2); }
+.modal-close { background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.modal-close:hover { color: var(--red); }
+
+textarea.tool-input {
+  width: 100%; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; color: var(--text);
+  font-family: 'Syne', sans-serif; font-size: 14px;
+  outline: none; resize: vertical; min-height: 100px;
+  margin-bottom: 12px;
+}
+
+textarea.tool-input:focus { border-color: var(--accent2); }
+
+.tool-result {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px; font-size: 14px; color: var(--text);
+  line-height: 1.7; min-height: 60px;
+  display: none;
+}
+
+.tool-result.show { display: block; }
+
+/* ===== NOTIFICATION ===== */
+.notif {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent); padding: 10px 22px;
+  border-radius: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  transition: transform 0.3s; z-index: 200;
+  white-space: nowrap; box-shadow: var(--glow);
+}
+
+.notif.show { transform: translateX(-50%) translateY(0); }
+.notif.error { color: var(--red); border-color: rgba(255,85,119,0.3); }
+
+@media (max-width: 520px) {
+  .apps-grid { grid-template-columns: 1fr 1fr; }
+  .tools-grid { grid-template-columns: 1fr 1fr; }
+  .related-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">NY</div>
+  <div class="nav-item active" onclick="showPage('home')" id="nav-home">🏠<div class="tooltip">HOME</div></div>
+  <div class="nav-item" onclick="showPage('search')" id="nav-search">🔍<div class="tooltip">DEEP SEARCH</div></div>
+  <div class="nav-item" onclick="showPage('chat')" id="nav-chat">💬<div class="tooltip">NY CHAT</div></div>
+  <div class="nav-divider"></div>
+  <div class="nav-item" onclick="showPage('instagram')" id="nav-instagram">📸<div class="tooltip">PRIVATE INSTAGRAM</div></div>
+  <div class="nav-divider"></div>
+  <div class="nav-item" onclick="showPage('tools')" id="nav-tools">🛠️<div class="tooltip">AI TOOLS</div></div>
+  <div class="nav-item" onclick="showPage('privacy')" id="nav-privacy">🛡️<div class="tooltip">PRIVACY TOOLS</div></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ===== HOME ===== -->
+  <div class="page active" id="page-home">
+    <div class="home-header">
+      <div class="portal-title">NY PORTAL</div>
+      <div class="portal-sub">// YOUR PRIVATE ALL-IN-ONE WEB PLATFORM</div>
+    </div>
+
+    <div class="api-bar">
+      <label>⚡ GROQ API KEY</label>
+      <input type="password" id="globalApiKey" placeholder="gsk_•••••••••••••••••••••" />
+      <button class="api-save" onclick="saveGlobalKey()">SAVE KEY</button>
+    </div>
+
+    <div class="privacy-bar">
+      <div class="privacy-dot"></div>
+      <div class="privacy-text">PRIVACY MODE ACTIVE</div>
+      <div class="privacy-chips">
+        <div class="priv-chip">NO TRACKING</div>
+        <div class="priv-chip">NO ADS</div>
+        <div class="priv-chip">LOCAL ONLY</div>
+        <div class="priv-chip">ENCRYPTED</div>
+      </div>
+    </div>
+
+    <div class="sec-title" style="margin-top:20px">// YOUR APPS</div>
+
+    <div class="apps-grid">
+      <div class="app-card" style="--card-color:#64dcff" onclick="showPage('search')">
+        <div class="app-badge">FREE</div>
+        <div class="app-icon">🔍</div>
+        <div class="app-name">NY Deep Search</div>
+        <div class="app-desc">Search across web, news, academic, social & more</div>
+      </div>
+      <div class="app-card" style="--card-color:#a78bfa" onclick="showPage('chat')">
+        <div class="app-badge">FREE</div>
+        <div class="app-icon">💬</div>
+        <div class="app-name">NY Chat</div>
+        <div class="app-desc">AI conversation with voice input & output</div>
+      </div>
+      <div class="app-card" style="--card-color:#ff6eb4" onclick="showPage('instagram')">
+        <div class="app-badge">PRIVATE</div>
+        <div class="app-icon">📸</div>
+        <div class="app-name">Private Instagram</div>
+        <div class="app-desc">View Instagram without Meta tracking you</div>
+      </div>
+      <div class="app-card" style="--card-color:#00ffaa" onclick="showPage('tools')">
+        <div class="app-badge">FREE</div>
+        <div class="app-icon">🛠️</div>
+        <div class="app-name">AI Tools</div>
+        <div class="app-desc">Summarizer, translator, writer, analyzer & more</div>
+      </div>
+      <div class="app-card" style="--card-color:#ffd700" onclick="showPage('privacy')">
+        <div class="app-badge">FREE</div>
+        <div class="app-icon">🛡️</div>
+        <div class="app-name">Privacy Tools</div>
+        <div class="app-desc">Private browsers, VPNs, secure email & more</div>
+      </div>
+      <div class="app-card" style="--card-color:#ff5577" onclick="window.open('https://github.com','_blank')">
+        <div class="app-badge">HOST</div>
+        <div class="app-icon">☁️</div>
+        <div class="app-name">GitHub Pages</div>
+        <div class="app-desc">Host this portal free at yourusername.github.io</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DEEP SEARCH ===== -->
+  <div class="page" id="page-search">
+    <div class="page-header">
+      <div>
+        <div class="page-title">🔍 NY Deep Search</div>
+        <div class="page-sub">SEARCH ACROSS ALL LEGAL SOURCES</div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <span style="color:var(--muted)">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search anything deeply..." autocomplete="off"
+        onkeydown="if(event.key==='Enter') doSearch(this.value)" />
+      <button class="icon-btn" id="searchVoiceBtn" onclick="startVoice('searchInput','searchVoiceBtn')">🎤</button>
+    </div>
+
+    <div class="search-types" id="searchTypes">
+      <div class="stype selected" data-type="all" onclick="selType(this)">🌐 ALL</div>
+      <div class="stype" data-type="news" onclick="selType(this)">📰 NEWS</div>
+      <div class="stype" data-type="academic" onclick="selType(this)">📚 ACADEMIC</div>
+      <div class="stype" data-type="social" onclick="selType(this)">💬 SOCIAL</div>
+      <div class="stype" data-type="video" onclick="selType(this)">▶️ VIDEO</div>
+      <div class="stype" data-type="science" onclick="selType(this)">🔬 SCIENCE</div>
+      <div class="stype" data-type="finance" onclick="selType(this)">📈 FINANCE</div>
+      <div class="stype" data-type="legal" onclick="selType(this)">⚖️ LEGAL</div>
+    </div>
+
+    <button class="big-btn" onclick="doSearch(document.getElementById('searchInput').value)">⚡ DEEP SEARCH</button>
+
+    <div id="searchResults"></div>
+  </div>
+
+  <!-- ===== CHAT ===== -->
+  <div class="page" id="page-chat">
+    <div class="page-header">
+      <div>
+        <div class="page-title">💬 NY Chat</div>
+        <div class="page-sub">AI CONVERSATION WITH VOICE</div>
+      </div>
+    </div>
+
+    <div class="chat-wrap">
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty-chat" id="emptyChat">
+          <div class="big">🤖</div>
+          <p>NY IS ONLINE<br>READY FOR CONVERSATION<br><br>Type or speak to begin</p>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <textarea id="chatInput" placeholder="Ask NY anything..." rows="1"
+            onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="voice-orb" id="chatVoiceBtn" onclick="startVoice('chatInput','chatVoiceBtn',true)">🎤</button>
+        </div>
+        <div class="chat-btns">
+          <button class="send-btn" id="sendBtn" onclick="sendChat()">SEND MESSAGE</button>
+          <button class="clear-btn" onclick="clearChat()">CLEAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INSTAGRAM PRIVACY ===== -->
+  <div class="page" id="page-instagram">
+    <div class="page-header">
+      <div>
+        <div class="page-title" style="color:var(--pink)">📸 Private Instagram</div>
+        <div class="page-sub">VIEW WITHOUT META TRACKING</div>
+      </div>
+    </div>
+
+    <div class="ig-header">
+      <div class="ig-icon">🛡️</div>
+      <div>
+        <div class="ig-title">Meta-Free Instagram Viewer</div>
+        <div class="ig-sub">These tools let you view public Instagram profiles and posts without logging in or being tracked by Meta/Facebook. Your identity stays private.</div>
+        <div class="privacy-tags">
+          <span class="ptag">NO META TRACKING</span>
+          <span class="ptag">NO COOKIES</span>
+          <span class="ptag">NO LOGIN NEEDED</span>
+          <span class="ptag">PUBLIC PROFILES ONLY</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ig-search-box">
+      <input class="ig-input" type="text" id="igUsername" placeholder="Enter Instagram username (e.g. nasa)" />
+      <button class="ig-btn" onclick="viewIgProfile()">VIEW PROFILE</button>
+    </div>
+
+    <div class="sec-title">// PRIVACY FRONTENDS — CLICK TO OPEN</div>
+
+    <div class="ig-proxy-list">
+      <a class="proxy-card" href="https://proxigram.lunar.icu" target="_blank" rel="noopener noreferrer">
+        <div class="proxy-icon">🌙</div>
+        <div class="proxy-info">
+          <div class="proxy-name">Proxigram</div>
+          <div class="proxy-desc">View Instagram profiles, posts and stories without any Meta tracking. No account needed.</div>
+        </div>
+        <div class="proxy-badge">PRIVATE</div>
+      </a>
+
+      <a class="proxy-card" href="https://imginn.com" target="_blank" rel="noopener noreferrer">
+        <div class="proxy-icon">📷</div>
+        <div class="proxy-info">
+          <div class="proxy-name">Imginn</div>
+          <div class="proxy-desc">Anonymous Instagram story and post viewer. Browse public profiles without signing in.</div>
+        </div>
+        <div class="proxy-badge">PRIVATE</div>
+      </a>
+
+      <a class="proxy-card" href="https://picuki.com" target="_blank" rel="noopener noreferrer">
+        <div class="proxy-icon">🖼️</div>
+        <div class="proxy-info">
+          <div class="proxy-name">Picuki</div>
+          <div class="proxy-desc">Edit and view Instagram profiles, photos and hashtags without a Meta account.</div>
+        </div>
+        <div class="proxy-badge">PRIVATE</div>
+      </a>
+
+      <a class="proxy-card" href="https://bibliogram.art" target="_blank" rel="noopener noreferrer">
+        <div class="proxy-icon">📚</div>
+        <div class="proxy-info">
+          <div class="proxy-name">Bibliogram</div>
+          <div class="proxy-desc">Open source Instagram front-end. Faster, no ads, no tracking, no JavaScript required.</div>
+        </div>
+        <div class="proxy-badge">OPEN SOURCE</div>
+      </a>
+    </div>
+
+    <div class="ig-note">
+      ⚠️ These tools only work for <strong>public profiles</strong>. Private accounts cannot be viewed. This is for privacy protection — not for accessing private content. All tools listed are legal and publicly available.
+    </div>
+  </div>
+
+  <!-- ===== AI TOOLS ===== -->
+  <div class="page" id="page-tools">
+    <div class="page-header">
+      <div>
+        <div class="page-title" style="color:var(--green)">🛠️ AI Tools</div>
+        <div class="page-sub">POWERED BY GROQ AI — FREE</div>
+      </div>
+    </div>
+
+    <!-- Active tool modal -->
+    <div class="tool-modal" id="toolModal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Tool</div>
+        <button class="modal-close" onclick="closeTool()">✕</button>
+      </div>
+      <textarea class="tool-input" id="toolInput" placeholder="Enter your text here..."></textarea>
+      <button class="big-btn" style="margin-bottom:12px" onclick="runTool()">⚡ RUN</button>
+      <div class="tool-result" id="toolResult"></div>
+    </div>
+
+    <div class="tools-grid">
+      <div class="tool-card" style="--card-color:#a78bfa" onclick="openTool('summarize','📝 Summarizer','Paste any text to summarize...')">
+        <div class="tool-icon">📝</div>
+        <div class="tool-name">Summarizer</div>
+        <div class="tool-desc">Summarize any long text instantly</div>
+      </div>
+      <div class="tool-card" style="--card-color:#64dcff" onclick="openTool('translate','🌍 Translator','Enter text to translate...')">
+        <div class="tool-icon">🌍</div>
+        <div class="tool-name">Translator</div>
+        <div class="tool-desc">Translate text to any language</div>
+      </div>
+      <div class="tool-card" style="--card-color:#00ffaa" onclick="openTool('write','✍️ AI Writer','Describe what you want written...')">
+        <div class="tool-icon">✍️</div>
+        <div class="tool-name">AI Writer</div>
+        <div class="tool-desc">Write emails, posts, essays</div>
+      </div>
+      <div class="tool-card" style="--card-color:#ffd700" onclick="openTool('explain','🧠 Explainer','Enter any topic or concept...')">
+        <div class="tool-icon">🧠</div>
+        <div class="tool-name">Explainer</div>
+        <div class="tool-desc">Explain anything simply</div>
+      </div>
+      <div class="tool-card" style="--card-color:#ff6eb4" onclick="openTool('grammar','✅ Grammar Fix','Paste text to fix grammar...')">
+        <div class="tool-icon">✅</div>
+        <div class="tool-name">Grammar Fix</div>
+        <div class="tool-desc">Fix grammar and spelling</div>
+      </div>
+      <div class="tool-card" style="--card-color:#ff5577" onclick="openTool('code','💻 Code Helper','Describe what code you need...')">
+        <div class="tool-icon">💻</div>
+        <div class="tool-name">Code Helper</div>
+        <div class="tool-desc">Write or explain any code</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PRIVACY TOOLS ===== -->
+  <div class="page" id="page-privacy">
+    <div class="page-header">
+      <div>
+        <div class="page-title" style="color:var(--yellow)">🛡️ Privacy Tools</div>
+        <div class="page-sub">STAY PRIVATE ONLINE — ALL FREE</div>
+      </div>
+    </div>
+
+    <div class="sec-title">// PRIVATE BROWSERS</div>
+    <div class="ig-proxy-list">
+      <a class="proxy-card" href="https://brave.com" target="_blank" rel="noopener">
+        <div class="proxy-icon">🦁</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Brave Browser</div>
+          <div class="proxy-desc">Blocks ads and trackers by default. Built-in Tor mode for anonymous browsing.</div>
+        </div>
+        <div class="proxy-badge">RECOMMENDED</div>
+      </a>
+      <a class="proxy-card" href="https://www.torproject.org" target="_blank" rel="noopener">
+        <div class="proxy-icon">🧅</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Tor Browser</div>
+          <div class="proxy-desc">Anonymous browsing through the Tor network. Hides your IP completely.</div>
+        </div>
+        <div class="proxy-badge">ANONYMOUS</div>
+      </a>
+    </div>
+
+    <div class="sec-title">// PRIVATE SEARCH ENGINES</div>
+    <div class="ig-proxy-list">
+      <a class="proxy-card" href="https://duckduckgo.com" target="_blank" rel="noopener">
+        <div class="proxy-icon">🦆</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">DuckDuckGo</div>
+          <div class="proxy-desc">No tracking, no profile building. Private search that doesn't follow you.</div>
+        </div>
+        <div class="proxy-badge">NO TRACKING</div>
+      </a>
+      <a class="proxy-card" href="https://search.brave.com" target="_blank" rel="noopener">
+        <div class="proxy-icon">🔍</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Brave Search</div>
+          <div class="proxy-desc">Independent search index. No Google, no tracking, completely private.</div>
+        </div>
+        <div class="proxy-badge">INDEPENDENT</div>
+      </a>
+    </div>
+
+    <div class="sec-title">// FREE VPN & SECURE EMAIL</div>
+    <div class="ig-proxy-list">
+      <a class="proxy-card" href="https://protonvpn.com" target="_blank" rel="noopener">
+        <div class="proxy-icon">🔒</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Proton VPN</div>
+          <div class="proxy-desc">Free tier available. Swiss-based, no logs policy, open source VPN.</div>
+        </div>
+        <div class="proxy-badge">FREE TIER</div>
+      </a>
+      <a class="proxy-card" href="https://proton.me" target="_blank" rel="noopener">
+        <div class="proxy-icon">📧</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Proton Mail</div>
+          <div class="proxy-desc">End-to-end encrypted email. Free plan available. No one can read your emails.</div>
+        </div>
+        <div class="proxy-badge">ENCRYPTED</div>
+      </a>
+    </div>
+
+    <div class="sec-title">// PRIVATE SOCIAL ALTERNATIVES</div>
+    <div class="ig-proxy-list">
+      <a class="proxy-card" href="https://nitter.net" target="_blank" rel="noopener">
+        <div class="proxy-icon">🐦</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Nitter</div>
+          <div class="proxy-desc">Browse Twitter/X without an account or tracking. Open source frontend.</div>
+        </div>
+        <div class="proxy-badge">PRIVATE</div>
+      </a>
+      <a class="proxy-card" href="https://invidious.io" target="_blank" rel="noopener">
+        <div class="proxy-icon">▶️</div>
+        <div class="proxy-info">
+          <div class="proxy-name" style="color:var(--yellow)">Invidious</div>
+          <div class="proxy-desc">Watch YouTube without Google tracking you. No ads, no account needed.</div>
+        </div>
+        <div class="proxy-badge">NO ADS</div>
+      </a>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ===== STATE =====
+let apiKey = localStorage.getItem('groq_key') || '';
+let conversation = [];
+let searchType = 'all';
+let isListening = false;
+let recognition = null;
+let activeTool = '';
+
+if (apiKey) document.getElementById('globalApiKey').value = apiKey;
+
+// ===== NAVIGATION =====
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== API KEY =====
+function saveGlobalKey() {
+  const val = document.getElementById('globalApiKey').value.trim();
+  if (!val) { showNotif('Enter your API key!', true); return; }
+  apiKey = val;
+  localStorage.setItem('groq_key', val);
+  showNotif('API KEY SAVED ✓');
+}
+
+// ===== NOTIFICATION =====
+function showNotif(msg, isError = false) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'notif show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = 'notif' + (isError ? ' error' : ''), 3000);
+}
+
+// ===== VOICE =====
+function startVoice(inputId, btnId, sendAfter = false) {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    showNotif('VOICE NOT SUPPORTED IN THIS BROWSER', true); return;
+  }
+  if (isListening) { recognition?.stop(); return; }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  const btn = document.getElementById(btnId);
+
+  recognition.onstart = () => { isListening = true; btn.textContent = '🔴'; btn.classList.add('red','on'); };
+  recognition.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    document.getElementById(inputId).value = t;
+    if (sendAfter) sendChat();
+    else doSearch(t);
+  };
+  recognition.onend = () => {
+    isListening = false;
+    btn.textContent = '🎤';
+    btn.classList.remove('red','on');
+  };
+  recognition.onerror = () => {
+    isListening = false;
+    btn.textContent = '🎤';
+    btn.classList.remove('red','on');
+  };
+  recognition.start();
+}
+
+// ===== GROQ API =====
+async function callGroq(messages, maxTokens = 1200) {
+  if (!apiKey) {
+    showPage('home');
+    showNotif('SET YOUR GROQ API KEY FIRST!', true);
+    throw new Error('No API key');
+  }
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages, max_tokens: maxTokens, temperature: 0.3 })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'API error');
+  return data.choices[0].message.content;
+}
+
+// ===== DEEP SEARCH =====
+function selType(el) {
+  document.querySelectorAll('.stype').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  searchType = el.dataset.type;
+}
+
+function showSearchLoading(q) {
+  document.getElementById('searchResults').innerHTML = `
+    <div class="loading-wrap">
+      <div class="scan"><div class="scan-bar"></div></div>
+      <div class="load-txt">DEEP SEARCHING "${q.toUpperCase()}"...</div>
+    </div>`;
+}
+
+async function doSearch(query) {
+  query = query?.trim();
+  if (!query) { showNotif('ENTER SOMETHING TO SEARCH', true); return; }
+
+  showSearchLoading(query);
+
+  const typeMap = {
+    all: 'comprehensive web search', news: 'latest news',
+    academic: 'academic papers and research', social: 'social media and forums',
+    video: 'video content', science: 'scientific research',
+    finance: 'financial and market data', legal: 'legal documents and laws'
+  };
+
+  try {
+    const raw = await callGroq([{
+      role: 'system', content: 'You are a search engine. Return ONLY raw JSON. No markdown. No backticks.'
+    }, {
+      role: 'user',
+      content: `Search: "${query}" | Type: ${typeMap[searchType] || 'all'}
+
+Return JSON:
+{"stats":"About 3,240,000,000 results (0.54 seconds)","aiAnswer":"3 sentence expert answer","keyPoints":["fact1","fact2","fact3","fact4"],"results":[{"title":"t1","url":"https://en.wikipedia.org/wiki/${encodeURIComponent(query)}","domain":"wikipedia.org","description":"desc","icon":"📖"},{"title":"t2","url":"https://news.google.com/search?q=${encodeURIComponent(query)}","domain":"news.google.com","description":"desc","icon":"📰"},{"title":"t3","url":"https://scholar.google.com/scholar?q=${encodeURIComponent(query)}","domain":"scholar.google.com","description":"desc","icon":"📚"},{"title":"t4","url":"https://reddit.com/search/?q=${encodeURIComponent(query)}","domain":"reddit.com","description":"desc","icon":"💬"},{"title":"t5","url":"https://youtube.com/results?search_query=${encodeURIComponent(query)}","domain":"youtube.com","description":"desc","icon":"▶️"}],"categories":[{"n":"Wikipedia","u":"https://en.wikipedia.org/wiki/${encodeURIComponent(query)}","i":"📖"},{"n":"Google","u":"https://google.com/search?q=${encodeURIComponent(query)}","i":"🔍"},{"n":"YouTube","u":"https://youtube.com/results?search_query=${encodeURIComponent(query)}","i":"▶️"},{"n":"Reddit","u":"https://reddit.com/search/?q=${encodeURIComponent(query)}","i":"💬"},{"n":"Scholar","u":"https://scholar.google.com/scholar?q=${encodeURIComponent(query)}","i":"📚"},{"n":"News","u":"https://news.google.com/search?q=${encodeURIComponent(query)}","i":"📰"}],"related":["r1","r2","r3","r4","r5","r6"]}`
+    }], 1400);
+
+    const start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+    const d = JSON.parse(raw.substring(start, end + 1));
+    renderSearch(query, d);
+  } catch (err) {
+    document.getElementById('searchResults').innerHTML = `
+      <div style="text-align:center;padding:40px 0">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <div style="color:var(--red);font-size:14px;margin-bottom:8px">${err.message}</div>
+        <div style="color:var(--muted);font-size:12px">Check your API key</div>
+      </div>`;
+  }
+}
+
+function renderSearch(query, d) {
+  let html = `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;letter-spacing:0.1em">> ${d.stats}</div>`;
+
+  if (d.categories?.length) {
+    html += `<div class="cat-row">`;
+    d.categories.forEach(c => { html += `<a class="cat-pill" href="${c.u}" target="_blank" rel="noopener">${c.i} ${c.n}</a>`; });
+    html += `</div>`;
+  }
+
+  if (d.aiAnswer) {
+    html += `<div class="ai-answer-box"><span class="badge badge-ai">⚡ AI DEEP ANALYSIS</span><div class="ai-text">${d.aiAnswer}</div>`;
+    if (d.keyPoints?.length) {
+      html += `<div class="kp-list">`;
+      d.keyPoints.forEach(p => { html += `<div class="kp"><div class="kp-dot"></div><span>${p}</span></div>`; });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
+  if (d.results?.length) {
+    html += `<div class="sec-title">// RESULTS</div>`;
+    d.results.forEach(r => {
+      html += `<a class="result-item" href="${r.url}" target="_blank" rel="noopener">
+        <div class="result-domain">${r.icon} ${r.domain}</div>
+        <div class="result-title">${r.title}</div>
+        <div class="result-desc">${r.description}</div>
+      </a>`;
+    });
+  }
+
+  if (d.related?.length) {
+    html += `<div class="sec-title">// RELATED SEARCHES</div><div class="related-grid">`;
+    d.related.forEach(s => { html += `<div class="related-item" onclick="doSearch('${s.replace(/'/g,"\\'")}')"> ${s}</div>`; });
+    html += `</div>`;
+  }
+
+  document.getElementById('searchResults').innerHTML = html;
+}
+
+// ===== CHAT =====
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+function handleChatKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }
+
+function addMsg(role, text) {
+  const box = document.getElementById('chatMessages');
+  const empty = document.getElementById('emptyChat');
+  if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+  div.innerHTML = `<div class="avatar">${role === 'user' ? 'YOU' : 'NY'}</div><div class="bubble">${text.replace(/\n/g,'<br>')}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = 'typing';
+  div.innerHTML = `<div class="avatar">NY</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ''; input.style.height = 'auto';
+  addMsg('user', text);
+  conversation.push({ role: 'user', content: text });
+  document.getElementById('sendBtn').disabled = true;
+  addTyping();
+  try {
+    const reply = await callGroq([
+      { role: 'system', content: 'You are NY, a smart personal AI assistant. Be helpful, friendly and concise. No markdown in responses.' },
+      ...conversation
+    ], 800);
+    conversation.push({ role: 'assistant', content: reply });
+    document.getElementById('typing')?.remove();
+    addMsg('ai', reply);
+    speak(reply);
+  } catch (err) {
+    document.getElementById('typing')?.remove();
+    addMsg('ai', '⚠️ ' + err.message);
+  }
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text.replace(/[*#`_]/g,'').substring(0,500));
+  utt.rate = 1.0; utt.pitch = 1.0;
+  const v = window.speechSynthesis.getVoices();
+  const pref = v.find(x => x.name.includes('Google') || x.name.includes('Samantha'));
+  if (pref) utt.voice = pref;
+  window.speechSynthesis.speak(utt);
+}
+
+function clearChat() {
+  conversation = [];
+  document.getElementById('chatMessages').innerHTML = `
+    <div class="empty-chat" id="emptyChat">
+      <div class="big">🤖</div>
+      <p>CHAT CLEARED<br>READY FOR NEW CONVERSATION</p>
+    </div>`;
+  window.speechSynthesis?.cancel();
+  showNotif('CONVERSATION CLEARED');
+}
+
+// ===== INSTAGRAM =====
+function viewIgProfile() {
+  const u = document.getElementById('igUsername').value.trim();
+  if (!u) { showNotif('ENTER A USERNAME', true); return; }
+  window.open(`https://imginn.com/${u}`, '_blank');
+}
+
+// ===== AI TOOLS =====
+function openTool(type, title, placeholder) {
+  activeTool = type;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('toolInput').placeholder = placeholder;
+  document.getElementById('toolInput').value = '';
+  document.getElementById('toolResult').textContent = '';
+  document.getElementById('toolResult').classList.remove('show');
+  document.getElementById('toolModal').classList.add('open');
+  document.getElementById('toolInput').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeTool() {
+  document.getElementById('toolModal').classList.remove('open');
+  activeTool = '';
+}
+
+async function runTool() {
+  const input = document.getElementById('toolInput').value.trim();
+  if (!input) { showNotif('ENTER SOME TEXT FIRST', true); return; }
+
+  const prompts = {
+    summarize: `Summarize this text clearly and concisely:\n\n${input}`,
+    translate: `Detect the language and translate this to English (if already English, translate to Hindi):\n\n${input}`,
+    write: `Write the following for me professionally:\n\n${input}`,
+    explain: `Explain this simply as if to a beginner:\n\n${input}`,
+    grammar: `Fix all grammar, spelling and punctuation errors in this text. Return only the corrected text:\n\n${input}`,
+    code: `Help me with this coding task. Provide clean, working code with brief explanation:\n\n${input}`
+  };
+
+  const resultEl = document.getElementById('toolResult');
+  resultEl.textContent = '⚡ Processing...';
+  resultEl.classList.add('show');
+
+  try {
+    const reply = await callGroq([{ role: 'user', content: prompts[activeTool] || input }], 800);
+    resultEl.textContent = reply;
+  } catch (err) {
+    resultEl.textContent = '⚠️ ' + err.message;
+  }
+}
+
+// Load voices
+window.speechSynthesis?.getVoices();
+window.speechSynthesis?.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices());
+</script>
+</body>
+</html>
